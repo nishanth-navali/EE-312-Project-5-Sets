@@ -89,8 +89,8 @@ bool isMemberSet(const Set* self, int x) {
  * Be sure to restore the design invariant property that elements[] remains sorted
  * (yes, you can assume it is sorted when the function is called, that's what an invariant is all about)
  */
-void insertSet(Set* self, int x) {
-    if(isMemberSet(self, x)) return;
+
+int findIndex(Set* self, int x) {
     int index;
     if(x < self->elements[index]) {
         index = 0;
@@ -103,6 +103,12 @@ void insertSet(Set* self, int x) {
             if(x > self->elements[index-1] && x < self->elements[index + 1]) break;
         }
     }
+    return index
+}
+
+void insertSet(Set* self, int x) {
+    if(isMemberSet(self, x)) return;
+    int index = findIndex(self, x);
     self->len += 1;
     self->elements = realloc(self->elements, self->len * 4);
     for(int i = self->len - 1; i > index; i++) {
@@ -123,6 +129,14 @@ void insertSet(Set* self, int x) {
  * is almost definitely NOT worth the trouble
  */
 void removeSet(Set* self, int x) {
+    if(!isMemberSet(self, x)) return;
+    int index = findIndex(self, x);
+    self->len -= 1;
+    for(int i = index; i < self->len; i++) {
+        self->elements[i] = self->elements[i+1];
+    }
+    self->elements[self->len] = 0;
+    self->elements = realloc(self->elements, self->len * 4);
 }
 
 /* done for you already */
@@ -175,12 +189,27 @@ bool isEmptySet(const Set* self) {
 
 /* remove all elements from self that are not also elements of other */
 void intersectFromSet(Set* self, const Set* other) {
+    for(int i = 0; i < self->len; i++) {
+        if(isMemberSet(other; self->elements[i])) {
+            removeSet(self, self->elements[i]);
+        }
+    }
 }
 
 /* remove all elements from self that are also elements of other */
 void subtractFromSet(Set* self, const Set* other) {
+    for(int i = 0; i < other->len; i++) {
+        if(isMemberSet(self, other->elements[i])) {
+            removeSet(self, other->elements[i]);
+        }
+    }
 }
 
 /* add all elements of other to self (obviously, without creating duplicate elements) */
 void unionInSet(Set* self, const Set* other) {
+    for(int i = 0; i < other->len; i++) {
+        if(!isMemberSet(self, other->elements[i])) {
+            insertSet(self, other->elements[i]);
+        }
+    }
 }
