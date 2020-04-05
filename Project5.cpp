@@ -103,14 +103,14 @@ int findIndex(Set* self, int x) {
             if(x > self->elements[index-1] && x < self->elements[index + 1]) break;
         }
     }
-    return index
+    return index;
 }
 
 void insertSet(Set* self, int x) {
     if(isMemberSet(self, x)) return;
     int index = findIndex(self, x);
     self->len += 1;
-    self->elements = realloc(self->elements, self->len * 4);
+    self->elements = (int*) realloc(self->elements, self->len * 4);
     for(int i = self->len - 1; i > index; i++) {
         self->elements[i] = self->elements[i-1];
     }
@@ -136,7 +136,7 @@ void removeSet(Set* self, int x) {
         self->elements[i] = self->elements[i+1];
     }
     self->elements[self->len] = 0;
-    self->elements = realloc(self->elements, self->len * 4);
+    self->elements = (int*) realloc(self->elements, self->len * 4);
 }
 
 /* done for you already */
@@ -158,7 +158,7 @@ void displaySet(const Set* self) {
         }
     }
 }
-}
+
 
 /* return true if self and other have exactly the same elements */
 bool isEqualToSet(const Set* self, const Set* other) {
@@ -177,7 +177,7 @@ bool isSubsetOf(const Set* self, const Set* other) {
     }
     if(index + self->len + 1> other->len) return false;
     for(int i = 0; i < self->len; i++) {
-        if(self->elements[i] != elements[index + i]) return false;
+        if(self->elements[i] != other->elements[index + i]) return false;
     }
     return true;
 }
@@ -189,27 +189,63 @@ bool isEmptySet(const Set* self) {
 
 /* remove all elements from self that are not also elements of other */
 void intersectFromSet(Set* self, const Set* other) {
-    for(int i = 0; i < self->len; i++) {
-        if(isMemberSet(other; self->elements[i])) {
-            removeSet(self, self->elements[i]);
+    int* out = (int*) malloc(sizeof(int) * self->len);
+    int selfIndex = 0;
+    int otherIndex = 0;
+    int outIndex = 0;
+    for(int i = 0; i < self->len + other->len; i++) {
+        if(self->elements[selfIndex] == other->elements[otherIndex]) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            if(selfIndex < self->len - 1) selfIndex++;
+            if(otherIndex < other->len - 1) otherIndex++;
+        }
+        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            if(otherIndex < other->len - 1) otherIndex++;
+        }
+        else if(self->elements[selfIndex] < other->elements[otherIndex]) {
+            if(selfIndex < self->len - 1) selfIndex++;
         }
     }
+    out = (int*) realloc(out, sizeof(int) * outIndex);
+    self->len = outIndex;
+    free(self->elements);
+    self->elements = out;
 }
 
 /* remove all elements from self that are also elements of other */
 void subtractFromSet(Set* self, const Set* other) {
-    for(int i = 0; i < other->len; i++) {
-        if(isMemberSet(self, other->elements[i])) {
-            removeSet(self, other->elements[i]);
+    int* out = (int*) malloc(sizeof(int) * self->len);
+    int selfIndex = 0;
+    int otherIndex = 0;
+    int outIndex = 0;
+    for(int i = 0; i < self->len + other->len; i++) {
+        if(self->elements[selfIndex] != other->elements[otherIndex]) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            if(selfIndex < self->len - 1) selfIndex++;
+            if(otherIndex < other->len - 1) otherIndex++;
+        }
+        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            if(otherIndex < other->len - 1) otherIndex++;
+        }
+        else if(self->elements[selfIndex] < other->elements[otherIndex]) {
+            if(selfIndex < self->len - 1) selfIndex++;
         }
     }
+    out = (int*) realloc(out, sizeof(int) * outIndex);
+    self->len = outIndex;
+    free(self->elements);
+    self->elements = out;
 }
 
 /* add all elements of other to self (obviously, without creating duplicate elements) */
 void unionInSet(Set* self, const Set* other) {
-    for(int i = 0; i < other->len; i++) {
-        if(!isMemberSet(self, other->elements[i])) {
-            insertSet(self, other->elements[i]);
-        }
+    int* out = (int*) malloc(sizeof(int) * (self->len + other->len));
+    int selfIndex = 0;
+    int otherIndex = 0;
+    int outIndex = 0;
+    for(int i = 0; i < self->len + other->len; i++) {
+
     }
 }
