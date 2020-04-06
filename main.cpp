@@ -33,7 +33,7 @@ void randomSet(Set* s) {
     int i;
 
     createEmptySet(&t);
-    for (i = 0; i < n; i += 1) {
+    for (i = 0; i < n; i += 1) {;
         insertSet(&t, rand() % maximum_set_size);
     }
     assignSet(s, &t);
@@ -147,11 +147,12 @@ void specialCaseTests(void) {
     assert(isEmptySet(&s));
     for (i = 0; i < number_of_tests; i += 1) {
         randomSet(&s);
+        printf("create random set\n");
         assert(isSubsetOf(&empty, &s));
         assert(!isSubsetOf(&s, &empty));
         assert(isSubsetOf(&s, &universal));
         assert(!isSubsetOf(&universal, &s));
-
+        printf("subset stuff done\n");
         checkCase(&intersectFromSet, &empty, &s, &empty);
         checkCase(&intersectFromSet, &s, &empty, &empty);
         checkCase(&intersectFromSet, &universal, &s, &s);

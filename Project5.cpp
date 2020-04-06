@@ -61,26 +61,47 @@ void assignSet(Set* self, const Set* other) {
     createCopySet(self, other);
 }
 
-bool isMemberSetHelper(int* elements, int min, int max, int num) {
-    int index = (max + min)/2;
-    if(elements[index] == num) {
-        return true;
-    }
-    else if(num > elements[index]) {
-        min = index;
-    }
-    else if(num < elements[index]) {
-        max = index;
-    }
-    if(max == min) {
-        return false;
-    }
-    isMemberSetHelper(elements, min, max, num);
-}
+//bool isMemberSetHelper(int* elements, int min, int max, int num) {
+//    int index = (max + min)/2;
+//    if(elements[index] == num) {
+//        return true;
+//    }
+//    else if(num > elements[index]) {
+//        min = index;
+//    }
+//    else if(num < elements[index]) {
+//        max = index;
+//    }
+//    if(max == min) {
+//        return false;
+//    }
+//    isMemberSetHelper(elements, min, max, num);
+//}
 
 /* return true if x is an element of self O(logn) */
 bool isMemberSet(const Set* self, int x) {
-    return isMemberSetHelper(self->elements, 0, self->len - 1, x);
+
+    if(self->len == 0) return false;
+    else if(self->len == 1 && self->elements[0] == x) return true;
+    else if(self->len == 1 && self->elements[0] != x) return false;
+    //return isMemberSetHelper(self->elements, 0, self->len - 1, x);
+    else {
+        int low = 0;
+        int high = self->len - 1;
+        while (low <= high) {
+            int mid = (low+high)/2;
+            if(self->elements[mid] > x) {
+                high = mid - 1;
+            }
+            else if(self->elements[mid] < x) {
+                low = mid + 1;
+            }
+            else {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 /*
@@ -91,16 +112,16 @@ bool isMemberSet(const Set* self, int x) {
  */
 
 int findIndex(Set* self, int x) {
-    int index;
-    if(x < self->elements[index]) {
+    int index = 0;
+    if(x < self->elements[0]) {
         index = 0;
     }
     else if(x > self->elements[self->len - 1]) {
         index = self->len;
     }
     else {
-        for(index = 1; index < self->len; index++) {
-            if(x > self->elements[index-1] && x < self->elements[index + 1]) break;
+        for(index = 1; index < self->len - 1; index++) {
+            if(x > self->elements[index-1] && x < self->elements[index]) return index;
         }
     }
     return index;
@@ -108,13 +129,27 @@ int findIndex(Set* self, int x) {
 
 void insertSet(Set* self, int x) {
     if(isMemberSet(self, x)) return;
-    int index = findIndex(self, x);
-    self->len += 1;
-    self->elements = (int*) realloc(self->elements, self->len * 4);
-    for(int i = self->len - 1; i > index; i++) {
-        self->elements[i] = self->elements[i-1];
+    if(self->len == 0) {
+        createSingletonSet(self, x);
+        return;
     }
-    self->elements[index] = x;
+    int index = findIndex(self, x);
+    self->len++;
+    int* a = (int*) malloc(sizeof(int) * self->len);
+    for(int i = 0; i < self->len; i++) {
+        if(i < index) {
+            a[i] = self->elements[i];
+        }
+        else if(i == index) {
+            a[i] = x;
+        }
+        else if(i > index) {
+            a[i] = self->elements[i-1];
+        }
+    }
+    free(self->elements);
+    self->elements = a;
+
 }
 
 
@@ -130,13 +165,22 @@ void insertSet(Set* self, int x) {
  */
 void removeSet(Set* self, int x) {
     if(!isMemberSet(self, x)) return;
-    int index = findIndex(self, x);
-    self->len -= 1;
-    for(int i = index; i < self->len; i++) {
-        self->elements[i] = self->elements[i+1];
+    int index;
+    for(index = 0; index < self->len; index++) {
+        if(x == self->elements[index]) break;
     }
-    self->elements[self->len] = 0;
-    self->elements = (int*) realloc(self->elements, self->len * 4);
+    self->len--;
+    int* a = (int*) malloc( self->len * 4);
+    for(int i = 0; i < self->len; i++) {
+        if(i < index) {
+            a[i] = self->elements[i];
+        }
+        else if(i >= index) {
+            a[i] = self->elements[i+1];
+        }
+    }
+    free(self->elements);
+    self->elements = a;
 }
 
 /* done for you already */
@@ -171,13 +215,30 @@ bool isEqualToSet(const Set* self, const Set* other) {
 
 /* return true if every element of self is also an element of other */
 bool isSubsetOf(const Set* self, const Set* other) {
-    int index = 0;
-    for(; index < other->len; index++) {
-        if(self->elements[0] == other->elements[index]) break;
-    }
-    if(index + self->len + 1> other->len) return false;
-    for(int i = 0; i < self->len; i++) {
-        if(self->elements[i] != other->elements[index + i]) return false;
+    if(self->len == 0) return true;
+//    int index = 0;
+//    for(; index < other->len; index++) {
+//        if(self->elements[0] == other->elements[index]) break;
+//    }
+//    if((index + self->len + 1) > other->len) return false;
+//    for(int i = 0; i < self->len; i++) {
+//        if(self->elements[i] != other->elements[index + i]) return false;
+//    }
+//    return true;
+    int selfIndex = 0;
+    int otherIndex = 0;
+    while(selfIndex < self->len) {
+        if(otherIndex >= other->len) return false;
+        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            otherIndex++;
+        }
+        else if(self->elements[selfIndex] < other->elements[otherIndex]) {
+            return false;
+        }
+        else if(self->elements[selfIndex] == other->elements[otherIndex]) {
+            selfIndex++;
+            otherIndex++;
+        }
     }
     return true;
 }
@@ -193,21 +254,20 @@ void intersectFromSet(Set* self, const Set* other) {
     int selfIndex = 0;
     int otherIndex = 0;
     int outIndex = 0;
-    for(int i = 0; i < self->len + other->len; i++) {
-        if(self->elements[selfIndex] == other->elements[otherIndex]) {
-            out[outIndex] = self->elements[selfIndex];
-            outIndex++;
-            if(selfIndex < self->len - 1) selfIndex++;
-            if(otherIndex < other->len - 1) otherIndex++;
-        }
-        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
-            if(otherIndex < other->len - 1) otherIndex++;
+    while(selfIndex < self->len && otherIndex < other->len) {
+        if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            otherIndex++;
         }
         else if(self->elements[selfIndex] < other->elements[otherIndex]) {
-            if(selfIndex < self->len - 1) selfIndex++;
+            selfIndex++;
+        }
+        else if(self->elements[selfIndex] == other->elements[otherIndex]) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            selfIndex++;
+            otherIndex++;
         }
     }
-    out = (int*) realloc(out, sizeof(int) * outIndex);
     self->len = outIndex;
     free(self->elements);
     self->elements = out;
@@ -219,21 +279,25 @@ void subtractFromSet(Set* self, const Set* other) {
     int selfIndex = 0;
     int otherIndex = 0;
     int outIndex = 0;
-    for(int i = 0; i < self->len + other->len; i++) {
-        if(self->elements[selfIndex] != other->elements[otherIndex]) {
+    while(selfIndex < self->len) {
+        if(otherIndex >= other->len) {
             out[outIndex] = self->elements[selfIndex];
             outIndex++;
-            if(selfIndex < self->len - 1) selfIndex++;
-            if(otherIndex < other->len - 1) otherIndex++;
-        }
-        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
-            if(otherIndex < other->len - 1) otherIndex++;
+            selfIndex++;
         }
         else if(self->elements[selfIndex] < other->elements[otherIndex]) {
-            if(selfIndex < self->len - 1) selfIndex++;
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            selfIndex++;
+        }
+        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            otherIndex++;
+        }
+        else if(self->elements[selfIndex] == other->elements[otherIndex]) {
+            otherIndex++;
+            selfIndex++;
         }
     }
-    out = (int*) realloc(out, sizeof(int) * outIndex);
     self->len = outIndex;
     free(self->elements);
     self->elements = out;
@@ -245,7 +309,35 @@ void unionInSet(Set* self, const Set* other) {
     int selfIndex = 0;
     int otherIndex = 0;
     int outIndex = 0;
-    for(int i = 0; i < self->len + other->len; i++) {
-
+    while(selfIndex < self->len || otherIndex < other->len) {
+        if(otherIndex >= other->len) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            selfIndex++;
+        }
+        else if(selfIndex >= self->len) {
+            out[outIndex] = other->elements[otherIndex];
+            outIndex++;
+            otherIndex++;
+        }
+        else if(self->elements[selfIndex] < other->elements[otherIndex]) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            selfIndex++;
+        }
+        else if(self->elements[selfIndex] > other->elements[otherIndex]) {
+            out[outIndex] = other->elements[otherIndex];
+            outIndex++;
+            otherIndex++;
+        }
+        else if(self->elements[selfIndex] == other->elements[otherIndex]) {
+            out[outIndex] = self->elements[selfIndex];
+            outIndex++;
+            otherIndex++;
+            selfIndex++;
+        }
     }
+    self->len = outIndex;
+    free(self->elements);
+    self->elements = out;
 }
